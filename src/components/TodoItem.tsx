@@ -163,6 +163,29 @@ const TodoItem: React.FC<TodoItemProps> = ({
                   {displayUrl}
                 </a>
               )}
+              {/* Subtasks display in the list */}
+              {editedSubtasks.length > 0 && (
+                <div className="mt-2 ml-6 w-full space-y-1">
+                  {editedSubtasks.map((subtask) => (
+                    <div key={subtask.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`list-subtask-${subtask.id}`}
+                        checked={subtask.isCompleted}
+                        onCheckedChange={() => handleToggleSubtask(subtask.id)}
+                      />
+                      <label
+                        htmlFor={`list-subtask-${subtask.id}`}
+                        className={cn(
+                          "text-sm",
+                          subtask.isCompleted && "line-through text-muted-foreground"
+                        )}
+                      >
+                        {subtask.text}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             <div className="flex items-center space-x-2">
               <Select
