@@ -4,10 +4,12 @@ import TodoForm from "@/components/TodoForm";
 import TodoItem from "@/components/TodoItem";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
+type TodoStatus = "Todo" | "Doing" | "Done";
+
 interface Todo {
   id: string;
   text: string;
-  completed: boolean;
+  status: TodoStatus;
 }
 
 const Index: React.FC = () => {
@@ -24,16 +26,16 @@ const Index: React.FC = () => {
     const newTodo: Todo = {
       id: Date.now().toString(),
       text,
-      completed: false,
+      status: "Todo",
     };
     setTodos((prevTodos) => [...prevTodos, newTodo]);
   };
 
-  const toggleTodo = (id: string) => {
+  const updateStatus = (id: string, status: TodoStatus) => {
     setTodos((prevTodos) =>
       prevTodos.map((todo) =>
-        todo.id === id ? { ...todo, completed: !todo.completed } : todo,
-      ),
+        todo.id === id ? { ...todo, status } : todo
+      )
     );
   };
 
@@ -62,8 +64,8 @@ const Index: React.FC = () => {
                   key={todo.id}
                   id={todo.id}
                   text={todo.text}
-                  completed={todo.completed}
-                  onToggle={toggleTodo}
+                  status={todo.status}
+                  onStatusChange={updateStatus}
                   onDelete={deleteTodo}
                 />
               ))
