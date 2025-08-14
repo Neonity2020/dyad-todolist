@@ -95,6 +95,17 @@ const TodoItem: React.FC<TodoItemProps> = ({
               )}>
                 {text}
               </div>
+              {url && (
+                <a
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-500 hover:underline text-sm truncate max-w-[150px]"
+                  onClick={(e) => e.stopPropagation()} // Prevent context menu on click
+                >
+                  {url}
+                </a>
+              )}
             </div>
             <div className="flex items-center space-x-2">
               <Select
