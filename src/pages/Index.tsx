@@ -10,6 +10,7 @@ interface Todo {
   id: string;
   text: string;
   status: TodoStatus;
+  url?: string; // Added URL property
 }
 
 const Index: React.FC = () => {
@@ -27,14 +28,15 @@ const Index: React.FC = () => {
       id: Date.now().toString(),
       text,
       status: "Todo",
+      url: "", // Initialize URL
     };
     setTodos((prevTodos) => [...prevTodos, newTodo]);
   };
 
-  const updateStatus = (id: string, status: TodoStatus) => {
+  const updateTodo = (id: string, updates: Partial<Todo>) => {
     setTodos((prevTodos) =>
       prevTodos.map((todo) =>
-        todo.id === id ? { ...todo, status } : todo
+        todo.id === id ? { ...todo, ...updates } : todo
       )
     );
   };
@@ -65,7 +67,8 @@ const Index: React.FC = () => {
                   id={todo.id}
                   text={todo.text}
                   status={todo.status}
-                  onStatusChange={updateStatus}
+                  url={todo.url} // Pass URL prop
+                  onUpdateTodo={updateTodo} // Pass generic update function
                   onDelete={deleteTodo}
                 />
               ))

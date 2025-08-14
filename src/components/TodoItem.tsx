@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Trash2, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input"; // Import Input component
 import {
   Select,
   SelectContent,
@@ -39,7 +40,8 @@ interface TodoItemProps {
   id: string;
   text: string;
   status: TodoStatus;
-  onStatusChange: (id: string, status: TodoStatus) => void;
+  url?: string; // Added URL prop
+  onUpdateTodo: (id: string, updates: { status?: TodoStatus; url?: string }) => void; // Updated prop
   onDelete: (id: string) => void;
 }
 
@@ -59,11 +61,27 @@ const TodoItem: React.FC<TodoItemProps> = ({
   id,
   text,
   status,
-  onStatusChange,
+  url, // Destructure URL prop
+  onUpdateTodo, // Destructure updated prop
   onDelete,
 }) => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+  const [editedUrl, setEditedUrl] = useState(url || ""); // State for URL input
+
+  useEffect(() => {
+    setEditedUrl(url || ""); // Update editedUrl when url prop changes
+  }, [url]);
+
+  const handleStatusChange = (newStatus: TodoStatus) => {
+    onUpdateTodo(id, { status: newStatus, url: editedUrl });
+  };
+
+  const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newUrl = e.target.value;
+    setEditedUrl(newUrl);
+    onUpdateTodo(id, { url: newUrl, status: status });
+  };
 
   return (
     <>
@@ -81,7 +99,7 @@ const TodoItem: React.FC<TodoItemProps> = ({
             <div className="flex items-center space-x-2">
               <Select
                 value={status}
-                onValueChange={(value: TodoStatus) => onStatusChange(id, value)}
+                onValueChange={handleStatusChange} // Use new handler
               >
                 <SelectTrigger className="w-[100px]">
                   <SelectValue placeholder="Status" />
@@ -147,7 +165,7 @@ const TodoItem: React.FC<TodoItemProps> = ({
               <h3 className="text-sm font-medium text-muted-foreground">Status</h3>
               <Select
                 value={status}
-                onValueChange={(value: TodoStatus) => onStatusChange(id, value)}
+                onValueChange={handleStatusChange} // Use new handler
               >
                 <SelectTrigger className="w-[150px]">
                   <SelectValue placeholder="Status" />
@@ -158,6 +176,16 @@ const TodoItem: React.FC<TodoItemProps> = ({
                   <SelectItem value="Done">Done</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-muted-foreground">URL</h3>
+              <Input
+                type="url"
+                placeholder="Add a URL (optional)"
+                value={editedUrl}
+                onChange={handleUrlChange} // Handle URL changes
+                className="mt-1"
+              />
             </div>
           </div>
         </DialogContent>
