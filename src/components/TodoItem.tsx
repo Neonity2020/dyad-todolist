@@ -41,7 +41,7 @@ interface TodoItemProps {
   text: string;
   status: TodoStatus;
   url?: string;
-  onUpdateTodo: (id: string, updates: { status?: TodoStatus; url?: string; text?: string }) => void; // Updated prop to include text
+  onUpdateTodo: (id: string, updates: { status?: TodoStatus; url?: string; text?: string }) => void;
   onDelete: (id: string) => void;
 }
 
@@ -68,14 +68,14 @@ const TodoItem: React.FC<TodoItemProps> = ({
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [editedUrl, setEditedUrl] = useState(url || "");
-  const [editedText, setEditedText] = useState(text); // New state for editable text
+  const [editedText, setEditedText] = useState(text);
 
   useEffect(() => {
     setEditedUrl(url || "");
   }, [url]);
 
   useEffect(() => {
-    setEditedText(text); // Update editedText when text prop changes
+    setEditedText(text);
   }, [text]);
 
   const handleStatusChange = (newStatus: TodoStatus) => {
@@ -102,7 +102,7 @@ const TodoItem: React.FC<TodoItemProps> = ({
       <ContextMenu>
         <ContextMenuTrigger>
           <div className="flex items-center justify-between p-3 border-b last:border-b-0">
-            <div className="flex items-center space-x-3 flex-grow">
+            <div className="flex flex-col items-start flex-grow"> {/* Changed to flex-col */}
               <div className={cn(
                 "px-3 py-1 rounded-full text-sm font-medium",
                 statusColors[status]
@@ -114,8 +114,8 @@ const TodoItem: React.FC<TodoItemProps> = ({
                   href={url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-500 hover:underline text-sm truncate max-w-[150px]"
-                  onClick={(e) => e.stopPropagation()} // Prevent context menu on click
+                  className="text-blue-500 hover:underline text-xs truncate max-w-[200px] mt-1 ml-3" // Adjusted styling
+                  onClick={(e) => e.stopPropagation()}
                 >
                   {displayUrl}
                 </a>
@@ -187,7 +187,7 @@ const TodoItem: React.FC<TodoItemProps> = ({
               <Input
                 type="text"
                 value={editedText}
-                onChange={handleTextChange} // Handle text changes
+                onChange={handleTextChange}
                 className="mt-1"
               />
             </div>
