@@ -30,65 +30,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-
-type TodoStatus = "Todo" | "Doing" | "Done";
-
-interface TodoItemProps {
-  id: string;
-  text: string;
-  status: TodoStatus;
-  onStatusChange: (id: string, status: TodoStatus) => void;
-  onDelete: (id: string) => void;
-}
-
-const statusColors = {
-  Todo: "bg-gray-100 text-gray-800",
-  Doing: "bg-blue-100 text-blue-800",
-  Done: "bg-green-100 text-green-800",
-};
-
-const statusLabels = {
-  Todo: "To Do",
-  Doing: "In Progress",
-  Done: "Completed"
-};
-
-const TodoItem: React.FC<TodoItemI'll help you add the right-click context menu with task details functionality. Here's the complete implementation:
-
-<dyad-write path="src/components/TodoItem.tsx" description="Adding context menu and task details modal">
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Trash2, Info } from "lucide-react";
-import { cn } from "@/lib/utils";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuTrigger,
-} from "@/components/ui/context-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
 
