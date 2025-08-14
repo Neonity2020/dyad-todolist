@@ -60,7 +60,7 @@ const Index: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
-      <Card className="w-full max-w-md shadow-lg">
+      <Card className="w-full max-w-lg shadow-lg"> {/* Changed max-w-md to max-w-lg */}
         <CardHeader>
           <CardTitle className="text-3xl font-bold text-center">
             My Todo List
