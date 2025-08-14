@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Trash2, Info } from "lucide-react";
+import { Trash2, Info, X } from "lucide-react"; // Added X for subtask delete
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import {
@@ -33,15 +33,23 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox"; // Added Checkbox for subtasks
 
 type TodoStatus = "Todo" | "Doing" | "Done";
+
+interface Subtask {
+  id: string;
+  text: string;
+  isCompleted: boolean;
+}
 
 interface TodoItemProps {
   id: string;
   text: string;
   status: TodoStatus;
   url?: string;
-  onUpdateTodo: (id: string, updates: { status?: TodoStatus; url?: string; text?: string }) => void;
+  subtasks: Subtask[]; // Added subtasks prop
+  onUpdateTodo: (id: string, updates: { status?: TodoStatus; url?: string; text?: string; subtasks?: Subtask[] }) => void;
   onDelete: (id: string) => void;
 }
 
@@ -62,6 +70,7 @@ const TodoItem: React.FC<TodoItemProps> = ({
   text,
   status,
   url,
+  subtasks, // Destructure subtasks
   onUpdateTodo,
   onDelete,
 }) => {
@@ -69,6 +78,8 @@ const TodoItem: React.FC<TodoItemProps> = ({
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [editedUrl, setEditedUrl] = useState(url || "");
   const [editedText, setEditedText] = useState(text);
+  const [editedSubtasks, setEditedSubtasks] = useState<Subtask[]>(subtasks); // State for subtasks
+  const [newSubtaskText, setNewSubtaskText] = useState(""); // State for new subtask input
 
   useEffect(() => {
     setEditedUrl(url || "");
@@ -78,20 +89,52 @@ const TodoItem: React.FC<TodoItemProps> = ({
     setEditedText(text);
   }, [text]);
 
+  useEffect(() => {
+    setEditedSubtasks(subtasks); // Update editedSubtasks when subtasks prop changes
+  }, [subtasks]);
+
   const handleStatusChange = (newStatus: TodoStatus) => {
-    onUpdateTodo(id, { status: newStatus, url: editedUrl, text: editedText });
+    onUpdateTodo(id, { status: newStatus, url: editedUrl, text: editedText, subtasks: editedSubtasks });
   };
 
   const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newUrl = e.target.value;
     setEditedUrl(newUrl);
-    onUpdateTodo(id, { url: newUrl, status: status, text: editedText });
+    onUpdateTodo(id, { url: newUrl, status: status, text: editedText, subtasks: editedSubtasks });
   };
 
   const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newText = e.target.value;
     setEditedText(newText);
-    onUpdateTodo(id, { text: newText, status: status, url: editedUrl });
+    onUpdateTodo(id, { text: newText, status: status, url: editedUrl, subtasks: editedSubtasks });
+  };
+
+  const handleAddSubtask = () => {
+    if (newSubtaskText.trim()) {
+      const newSubtask: Subtask = {
+        id: Date.now().toString(),
+        text: newSubtaskText.trim(),
+        isCompleted: false,
+      };
+      const updatedSubtasks = [...editedSubtasks, newSubtask];
+      setEditedSubtasks(updatedSubtasks);
+      onUpdateTodo(id, { subtasks: updatedSubtasks, text: editedText, status: status, url: editedUrl });
+      setNewSubtaskText("");
+    }
+  };
+
+  const handleToggleSubtask = (subtaskId: string) => {
+    const updatedSubtasks = editedSubtasks.map((subtask) =>
+      subtask.id === subtaskId ? { ...subtask, isCompleted: !subtask.isCompleted } : subtask
+    );
+    setEditedSubtasks(updatedSubtasks);
+    onUpdateTodo(id, { subtasks: updatedSubtasks, text: editedText, status: status, url: editedUrl });
+  };
+
+  const handleDeleteSubtask = (subtaskId: string) => {
+    const updatedSubtasks = editedSubtasks.filter((subtask) => subtask.id !== subtaskId);
+    setEditedSubtasks(updatedSubtasks);
+    onUpdateTodo(id, { subtasks: updatedSubtasks, text: editedText, status: status, url: editedUrl });
   };
 
   // Function to strip "https://" or "http://" from the URL for display
@@ -102,7 +145,7 @@ const TodoItem: React.FC<TodoItemProps> = ({
       <ContextMenu>
         <ContextMenuTrigger>
           <div className="flex items-center justify-between p-3 border-b last:border-b-0">
-            <div className="flex flex-col items-start flex-grow"> {/* Changed to flex-col */}
+            <div className="flex flex-col items-start flex-grow">
               <div className={cn(
                 "px-3 py-1 rounded-full text-sm font-medium",
                 statusColors[status]
@@ -114,7 +157,7 @@ const TodoItem: React.FC<TodoItemProps> = ({
                   href={url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-500 hover:underline text-xs truncate max-w-[200px] mt-1 ml-3" // Adjusted styling
+                  className="text-blue-500 hover:underline text-xs truncate max-w-[200px] mt-1 ml-3"
                   onClick={(e) => e.stopPropagation()}
                 >
                   {displayUrl}
@@ -216,6 +259,60 @@ const TodoItem: React.FC<TodoItemProps> = ({
                 onChange={handleUrlChange}
                 className="mt-1"
               />
+            </div>
+            {/* Subtasks Section */}
+            <div>
+              <h3 className="text-sm font-medium text-muted-foreground mb-2">Subtasks</h3>
+              <div className="space-y-2">
+                {editedSubtasks.length === 0 ? (
+                  <p className="text-muted-foreground text-sm">No subtasks yet.</p>
+                ) : (
+                  editedSubtasks.map((subtask) => (
+                    <div key={subtask.id} className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`subtask-${subtask.id}`}
+                          checked={subtask.isCompleted}
+                          onCheckedChange={() => handleToggleSubtask(subtask.id)}
+                        />
+                        <label
+                          htmlFor={`subtask-${subtask.id}`}
+                          className={cn(
+                            "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
+                            subtask.isCompleted && "line-through text-muted-foreground"
+                          )}
+                        >
+                          {subtask.text}
+                        </label>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteSubtask(subtask.id)}
+                        className="h-7 w-7"
+                      >
+                        <X className="h-4 w-4 text-red-500" />
+                      </Button>
+                    </div>
+                  ))
+                )}
+              </div>
+              <div className="flex space-x-2 mt-4">
+                <Input
+                  type="text"
+                  placeholder="Add a new subtask..."
+                  value={newSubtaskText}
+                  onChange={(e) => setNewSubtaskText(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault(); // Prevent form submission
+                      handleAddSubtask();
+                    }
+                  }}
+                  className="flex-grow"
+                />
+                <Button onClick={handleAddSubtask}>Add Subtask</Button>
+              </div>
             </div>
           </div>
         </DialogContent>

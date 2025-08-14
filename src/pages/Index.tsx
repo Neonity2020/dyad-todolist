@@ -6,17 +6,29 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 type TodoStatus = "Todo" | "Doing" | "Done";
 
+interface Subtask {
+  id: string;
+  text: string;
+  isCompleted: boolean;
+}
+
 interface Todo {
   id: string;
   text: string;
   status: TodoStatus;
-  url?: string; // Added URL property
+  url?: string;
+  subtasks: Subtask[]; // Added subtasks
 }
 
 const Index: React.FC = () => {
   const [todos, setTodos] = useState<Todo[]>(() => {
     const savedTodos = localStorage.getItem("todos");
-    return savedTodos ? JSON.parse(savedTodos) : [];
+    const parsedTodos = savedTodos ? JSON.parse(savedTodos) : [];
+    // Ensure subtasks are initialized for existing todos if not present
+    return parsedTodos.map((todo: Todo) => ({
+      ...todo,
+      subtasks: todo.subtasks || [], // Ensure subtasks array exists
+    }));
   });
 
   useEffect(() => {
@@ -28,7 +40,8 @@ const Index: React.FC = () => {
       id: Date.now().toString(),
       text,
       status: "Todo",
-      url: "", // Initialize URL
+      url: "",
+      subtasks: [], // Initialize subtasks
     };
     setTodos((prevTodos) => [...prevTodos, newTodo]);
   };
@@ -67,8 +80,9 @@ const Index: React.FC = () => {
                   id={todo.id}
                   text={todo.text}
                   status={todo.status}
-                  url={todo.url} // Pass URL prop
-                  onUpdateTodo={updateTodo} // Pass generic update function
+                  url={todo.url}
+                  subtasks={todo.subtasks} // Pass subtasks prop
+                  onUpdateTodo={updateTodo}
                   onDelete={deleteTodo}
                 />
               ))
