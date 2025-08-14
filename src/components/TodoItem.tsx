@@ -83,6 +83,9 @@ const TodoItem: React.FC<TodoItemProps> = ({
     onUpdateTodo(id, { url: newUrl, status: status });
   };
 
+  // Function to strip "https://" or "http://" from the URL for display
+  const displayUrl = url ? url.replace(/^(https?:\/\/)/, '') : '';
+
   return (
     <>
       <ContextMenu>
@@ -103,7 +106,7 @@ const TodoItem: React.FC<TodoItemProps> = ({
                   className="text-blue-500 hover:underline text-sm truncate max-w-[150px]"
                   onClick={(e) => e.stopPropagation()} // Prevent context menu on click
                 >
-                  {url}
+                  {displayUrl}
                 </a>
               )}
             </div>
