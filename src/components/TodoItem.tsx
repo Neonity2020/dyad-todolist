@@ -145,12 +145,19 @@ const TodoItem: React.FC<TodoItemProps> = ({
             </div>
             <div>
               <h3 className="text-sm font-medium text-muted-foreground">Status</h3>
-              <div className={cn(
-                "inline-flex px-3 py-1 rounded-full text-sm font-medium mt-1",
-                statusColors[status]
-              )}>
-                {statusLabels[status]}
-              </div>
+              <Select
+                value={status}
+                onValueChange={(value: TodoStatus) => onStatusChange(id, value)}
+              >
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Todo">Todo</SelectItem>
+                  <SelectItem value="Doing">Doing</SelectItem>
+                  <SelectItem value="Done">Done</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </DialogContent>
