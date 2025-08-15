@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Trash2, Info, X, Edit2, Check, X as XIcon } from "lucide-react"; // Added Edit2, Check, XIcon for subtask editing
+import { Trash2, Info, X, Edit2, Check, X as XIcon, GripVertical } from "lucide-react"; // Added GripVertical for drag handle
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import {
   Select,
   SelectContent,
@@ -76,6 +78,20 @@ const TodoItem: React.FC<TodoItemProps> = ({
   onUpdateTodo,
   onDelete,
 }) => {
+  // Sortable functionality
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [editedUrl, setEditedUrl] = useState(url || "");
@@ -177,14 +193,30 @@ const TodoItem: React.FC<TodoItemProps> = ({
     <>
       <ContextMenu>
         <ContextMenuTrigger>
-          <div className="flex flex-col p-3 border-b last:border-b-0 group">
+          <div 
+            ref={setNodeRef}
+            style={style}
+            className={cn(
+              "flex flex-col p-3 border-b last:border-b-0 group relative",
+              isDragging && "opacity-0"
+            )}
+          >
             {/* Top row: Task title, status, and delete button */}
             <div className="flex items-center justify-between mb-2">
-              <div className={cn(
-                "px-3 py-1 rounded-full text-sm font-medium",
-                statusColors[status]
-              )}>
-                {text}
+              <div className="flex items-center space-x-2 flex-1 min-w-0">
+                <div
+                  {...attributes}
+                  {...listeners}
+                  className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
+                >
+                  <GripVertical className="h-4 w-4" />
+                </div>
+                <div className={cn(
+                  "px-3 py-1 rounded-full text-sm font-medium flex-shrink-0",
+                  statusColors[status]
+                )}>
+                  {text}
+                </div>
               </div>
               <div className="flex items-center space-x-2">
                 <Select
