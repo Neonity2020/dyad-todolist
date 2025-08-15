@@ -116,7 +116,7 @@ const Index: React.FC = () => {
       <Card className="w-full max-w-lg shadow-lg"> {/* Changed max-w-md to max-w-lg */}
         <CardHeader>
           <CardTitle className="text-3xl font-bold text-center">
-            My Todo List
+            Dyad Todo List by Neonity
           </CardTitle>
         </CardHeader>
         <CardContent>
