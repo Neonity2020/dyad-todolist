@@ -121,7 +121,7 @@ const TodoItem: React.FC<TodoItemProps> = ({
   const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newUrl = e.target.value;
     setEditedUrl(newUrl);
-    onUpdateTodo(id, { url: newUrl, status: status, githubUrl: editedGitHubUrl, text: editedText, subtasks: editedSubtasks });
+    onUpdateTodo(id, { url: newUrl, status: status, githubUrl: editedGitHubUrl, text: editedText, url: editedUrl, subtasks: editedSubtasks });
   };
 
   const handleGitHubUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -371,7 +371,7 @@ const TodoItem: React.FC<TodoItemProps> = ({
           <DialogHeader>
             <DialogTitle>Task Details</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-4 w-full overflow-hidden">
+          <div className="space-y-4 py-4 w-full overflow-y-auto max-h-[80vh]"> {/* Added overflow-y-auto and max-h-[80vh] */}
             <div>
               <h3 className="text-sm font-medium text-muted-foreground">Task</h3>
               <Input
