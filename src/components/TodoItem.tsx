@@ -121,7 +121,7 @@ const TodoItem: React.FC<TodoItemProps> = ({
   const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newUrl = e.target.value;
     setEditedUrl(newUrl);
-    onUpdateTodo(id, { url: newUrl, status: status, githubUrl: editedGitHubUrl, text: editedText, url: editedUrl, subtasks: editedSubtasks });
+    onUpdateTodo(id, { url: newUrl, status: status, githubUrl: editedGitHubUrl, text: editedText, subtasks: editedSubtasks });
   };
 
   const handleGitHubUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
