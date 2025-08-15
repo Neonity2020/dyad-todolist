@@ -17,6 +17,7 @@ interface Todo {
   text: string;
   status: TodoStatus;
   url?: string;
+  githubUrl?: string; // Added GitHub URL
   subtasks: Subtask[]; // Added subtasks
 }
 
@@ -41,6 +42,7 @@ const Index: React.FC = () => {
       text,
       status: "Todo",
       url: "",
+      githubUrl: "", // Initialize GitHub URL
       subtasks: [], // Initialize subtasks
     };
     setTodos((prevTodos) => [...prevTodos, newTodo]);
@@ -81,6 +83,7 @@ const Index: React.FC = () => {
                   text={todo.text}
                   status={todo.status}
                   url={todo.url}
+                  githubUrl={todo.githubUrl} // Pass GitHub URL prop
                   subtasks={todo.subtasks} // Pass subtasks prop
                   onUpdateTodo={updateTodo}
                   onDelete={deleteTodo}
