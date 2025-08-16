@@ -169,74 +169,83 @@ const Index: React.FC = () => {
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
       <Card className="w-full max-w-lg shadow-lg">
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-3xl font-bold text-center flex-1">
+          {/* 标题单独一行 */}
+          <div className="text-center mb-4">
+            <CardTitle className="text-3xl font-bold">
               Dyad Todo List by Neonity
             </CardTitle>
-            <div className="flex items-center space-x-2">
-              <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
-                <User className="h-4 w-4" />
-                <span>{user?.email}</span>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleDebugAuth}
-                className="text-yellow-600 hover:text-yellow-700 border-yellow-200 hover:border-yellow-300"
-                title="调试认证状态"
-              >
-                <Bug className="h-4 w-4" />
-              </Button>
-              {/* 同步按钮 */}
-              {hasPendingChanges && (
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={syncToDatabase}
-                  disabled={syncing}
-                  className="bg-green-600 hover:bg-green-700 text-white border-green-600 hover:border-green-700"
-                  title={`${pendingOperations.length} 个操作待同步`}
-                >
-                  <RefreshCw className={`h-4 w-4 mr-1 ${syncing ? 'animate-spin' : ''}`} />
-                  同步 ({pendingOperations.length})
-                </Button>
-              )}
-              
-              {/* 强制同步按钮 */}
-              {hasPendingChanges && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={forceSync}
-                  disabled={syncing}
-                  className="text-orange-600 hover:text-orange-700 border-orange-200 hover:border-orange-300"
-                  title="强制同步（忽略错误）"
-                >
-                  <RefreshCw className="h-4 w-4 mr-1" />
-                  强制同步
-                </Button>
-              )}
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={refreshTodos}
-                disabled={loading}
-                className="text-blue-600 hover:text-blue-700 border-blue-200 hover:border-blue-300"
-              >
-                <RefreshCw className={`h-4 w-4 mr-1 ${loading ? 'animate-spin' : ''}`} />
-                刷新
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleSignOut}
-                className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300"
-              >
-                <LogOut className="h-4 w-4 mr-1" />
-                登出
-              </Button>
+          </div>
+          
+          {/* 用户名称单独一行 */}
+          <div className="text-center mb-4">
+            <div className="flex items-center justify-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
+              <User className="h-4 w-4" />
+              <span className="font-medium">{user?.email}</span>
             </div>
+          </div>
+          
+          {/* 操作按钮组单独一行，居中对齐 */}
+          <div className="flex items-center justify-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDebugAuth}
+              className="text-yellow-600 hover:text-yellow-700 border-yellow-200 hover:border-yellow-300"
+              title="调试认证状态"
+            >
+              <Bug className="h-4 w-4" />
+            </Button>
+            
+            {/* 同步按钮 */}
+            {hasPendingChanges && (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={syncToDatabase}
+                disabled={syncing}
+                className="bg-green-600 hover:bg-green-700 text-white border-green-600 hover:border-green-700"
+                title={`${pendingOperations.length} 个操作待同步`}
+              >
+                <RefreshCw className={`h-4 w-4 mr-1 ${syncing ? 'animate-spin' : ''}`} />
+                同步 ({pendingOperations.length})
+              </Button>
+            )}
+            
+            {/* 强制同步按钮 */}
+            {hasPendingChanges && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={forceSync}
+                disabled={syncing}
+                className="text-orange-600 hover:text-orange-700 border-orange-200 hover:border-orange-300"
+                title="强制同步（忽略错误）"
+              >
+                <RefreshCw className="h-4 w-4 mr-1" />
+                强制同步
+              </Button>
+            )}
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={refreshTodos}
+              disabled={loading}
+              className="text-blue-600 hover:text-blue-700 border-blue-200 hover:border-blue-300"
+            >
+              <RefreshCw className={`h-4 w-4 mr-1 ${loading ? 'animate-spin' : ''}`} />
+              刷新
+            </Button>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSignOut}
+              className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300"
+            >
+              <LogOut className="h-4 w-4 mr-1" />
+              登出
+            </Button>
           </div>
         </CardHeader>
         <CardContent>

@@ -57,7 +57,7 @@ interface TodoItemProps {
   subtasks: Subtask[]; // Added subtasks prop
   onUpdateTodo: (id: string, updates: { status?: TodoStatus; url?: string; githubUrl?: string; text?: string; subtasks?: EditableSubtask[] }) => void;
   onDelete: (id: string) => void;
-  onSyncSubtasks?: (todoId: string, subtasks: Subtask[]) => void; // 新增子任务同步回调
+  onSyncSubtasks: (todoId: string, subtasks: EditableSubtask[]) => void; // 子任务同步回调
 }
 
 const statusColors = {
@@ -146,16 +146,23 @@ const TodoItem: React.FC<TodoItemProps> = ({
   const handleAddSubtask = () => {
     if (newSubtaskText.trim()) {
       const newSubtask: EditableSubtask = {
-        id: Date.now().toString(),
+        id: `local_subtask_${Date.now()}`, // Use local_subtask_ prefix for new subtasks
         text: newSubtaskText.trim(),
         is_completed: false,
       };
       const updatedSubtasks = [...editedSubtasks, newSubtask];
       setEditedSubtasks(updatedSubtasks);
-      // 同步子任务到数据库
-      if (onSyncSubtasks) {
-        onSyncSubtasks(id, updatedSubtasks as Subtask[]);
-      }
+      
+      console.log('=== 添加子任务 ===');
+      console.log('新子任务:', newSubtask);
+      console.log('更新后的子任务列表:', updatedSubtasks);
+      console.log('onSyncSubtasks 回调:', onSyncSubtasks);
+      
+      // 通过 onSyncSubtasks 同步子任务到数据库
+      onSyncSubtasks(id, updatedSubtasks);
+      
+      console.log('onSyncSubtasks 调用完成');
+      
       setNewSubtaskText("");
     }
   };
@@ -165,19 +172,17 @@ const TodoItem: React.FC<TodoItemProps> = ({
       subtask.id === subtaskId ? { ...subtask, is_completed: !subtask.is_completed } : subtask
     );
     setEditedSubtasks(updatedSubtasks);
-    // 同步子任务到数据库
-    if (onSyncSubtasks) {
-      onSyncSubtasks(id, updatedSubtasks as Subtask[]);
-    }
+    
+    // 通过 onSyncSubtasks 同步子任务到数据库
+    onSyncSubtasks(id, updatedSubtasks);
   };
 
   const handleDeleteSubtask = (subtaskId: string) => {
     const updatedSubtasks = editedSubtasks.filter((subtask) => subtask.id !== subtaskId);
     setEditedSubtasks(updatedSubtasks);
-    // 同步子任务到数据库
-    if (onSyncSubtasks) {
-      onSyncSubtasks(id, updatedSubtasks as Subtask[]);
-    }
+    
+    // 通过 onSyncSubtasks 同步子任务到数据库
+    onSyncSubtasks(id, updatedSubtasks);
   };
 
   const handleEditSubtask = (subtaskId: string, currentText: string) => {
@@ -191,10 +196,9 @@ const TodoItem: React.FC<TodoItemProps> = ({
         subtask.id === subtaskId ? { ...subtask, text: editingSubtaskText.trim() } : subtask
       );
       setEditedSubtasks(updatedSubtasks);
-      // 同步子任务到数据库
-      if (onSyncSubtasks) {
-        onSyncSubtasks(id, updatedSubtasks as Subtask[]);
-      }
+      
+      // 通过 onSyncSubtasks 同步子任务到数据库
+      onSyncSubtasks(id, updatedSubtasks);
     }
     setEditingSubtaskId(null);
     setEditingSubtaskText("");

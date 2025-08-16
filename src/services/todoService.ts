@@ -73,9 +73,16 @@ export class TodoService {
 
   // 创建子任务
   static async createSubtask(subtask: Omit<Subtask, 'id' | 'created_at' | 'updated_at'>): Promise<Subtask> {
+    // 确保字段名映射正确
+    const subtaskData = {
+      text: subtask.text,
+      is_completed: subtask.is_completed,
+      todo_id: subtask.todo_id
+    };
+
     const { data, error } = await supabase
       .from('subtasks')
-      .insert([subtask])
+      .insert([subtaskData])
       .select()
       .single();
 
@@ -88,18 +95,46 @@ export class TodoService {
 
   // 更新子任务
   static async updateSubtask(id: string, updates: Partial<Subtask>): Promise<Subtask> {
-    const { data, error } = await supabase
-      .from('subtasks')
-      .update({ ...updates, updated_at: new Date().toISOString() })
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) {
-      throw new Error(`更新子任务失败: ${error.message}`);
+    console.log('TodoService.updateSubtask 被调用:', { id, updates });
+    
+    // 检查是否是本地ID（还未同步到数据库）
+    if (id.startsWith('local_subtask_')) {
+      console.warn('尝试更新本地子任务，跳过数据库操作:', id);
+      // 返回一个模拟的更新结果，因为本地子任务还没有数据库ID
+      return {
+        id,
+        text: updates.text || '',
+        is_completed: updates.is_completed || false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        todo_id: updates.todo_id || ''
+      } as Subtask;
     }
 
-    return data;
+    try {
+      const { data, error } = await supabase
+        .from('subtasks')
+        .update({ ...updates, updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Supabase 更新子任务失败:', error);
+        throw new Error(`更新子任务失败: ${error.message}`);
+      }
+
+      if (!data) {
+        console.error('更新子任务后没有返回数据');
+        throw new Error('更新子任务失败: 没有返回数据');
+      }
+
+      console.log('子任务更新成功:', data);
+      return data;
+    } catch (err) {
+      console.error('更新子任务时发生错误:', err);
+      throw err;
+    }
   }
 
   // 删除子任务
@@ -165,6 +200,42 @@ export class TodoService {
 
     if (error) {
       throw new Error(`批量更新子任务失败: ${error.message}`);
+    }
+  }
+
+  // 批量创建子任务
+  static async createSubtasks(subtasks: Array<Omit<Subtask, 'id' | 'created_at' | 'updated_at'>>): Promise<Subtask[]> {
+    if (subtasks.length === 0) return [];
+
+    const subtasksData = subtasks.map(subtask => ({
+      text: subtask.text,
+      is_completed: subtask.is_completed,
+      todo_id: subtask.todo_id
+    }));
+
+    const { data, error } = await supabase
+      .from('subtasks')
+      .insert(subtasksData)
+      .select();
+
+    if (error) {
+      throw new Error(`批量创建子任务失败: ${error.message}`);
+    }
+
+    return data || [];
+  }
+
+  // 批量删除子任务
+  static async deleteSubtasks(ids: string[]): Promise<void> {
+    if (ids.length === 0) return;
+
+    const { error } = await supabase
+      .from('subtasks')
+      .delete()
+      .in('id', ids);
+
+    if (error) {
+      throw new Error(`批量删除子任务失败: ${error.message}`);
     }
   }
 }
