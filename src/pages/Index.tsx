@@ -53,6 +53,7 @@ const Index: React.FC = () => {
   
   // 添加筛选状态
   const [statusFilter, setStatusFilter] = useState<TodoStatus | "All">("All");
+  const [signingOut, setSigningOut] = useState(false);
 
   // Drag and drop sensors
   const sensors = useSensors(
@@ -100,8 +101,52 @@ const Index: React.FC = () => {
   };
 
   const handleSignOut = async () => {
-    await signOut();
-    navigate("/login");
+    try {
+      // 显示确认对话框
+      const confirmed = window.confirm('确定要登出吗？这将清除您的登录状态。');
+      if (!confirmed) {
+        return;
+      }
+
+      setSigningOut(true);
+      console.log('用户确认登出，开始执行...');
+
+      // 执行登出
+      await signOut();
+      
+      console.log('登出成功，准备跳转到登录页面...');
+      
+      // 清理本地状态（如果有的话）
+      try {
+        // 清理任何本地缓存或状态
+        console.log('清理本地状态...');
+        
+        // 这里可以添加其他清理逻辑，比如：
+        // - 清理 localStorage
+        // - 清理 sessionStorage  
+        // - 重置组件状态
+        // - 清理定时器等
+        
+      } catch (cleanupError) {
+        console.warn('清理本地状态时出错:', cleanupError);
+      }
+      
+      // 显示成功消息（可选）
+      // 这里可以添加一个 toast 通知
+      
+      // 跳转到登录页面
+      navigate("/login");
+      
+    } catch (error) {
+      console.error('登出失败:', error);
+      
+      // 显示错误消息
+      const errorMessage = error instanceof Error ? error.message : '登出失败，请重试';
+      alert(`登出失败: ${errorMessage}`);
+      
+      // 重置登出状态
+      setSigningOut(false);
+    }
   };
 
   const handleDebugAuth = async () => {
@@ -241,10 +286,16 @@ const Index: React.FC = () => {
               variant="outline"
               size="sm"
               onClick={handleSignOut}
-              className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300"
+              disabled={signingOut}
+              className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              title={signingOut ? "正在登出..." : "退出登录"}
             >
-              <LogOut className="h-4 w-4 mr-1" />
-              登出
+              {signingOut ? (
+                <RefreshCw className="h-4 w-4 mr-1 animate-spin" />
+              ) : (
+                <LogOut className="h-4 w-4 mr-1" />
+              )}
+              {signingOut ? "登出中..." : "登出"}
             </Button>
           </div>
         </CardHeader>

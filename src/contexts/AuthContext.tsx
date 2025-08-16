@@ -140,7 +140,37 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      console.log('开始登出流程...');
+      
+      // 清理本地状态
+      setUser(null);
+      setSession(null);
+      setLoading(false);
+      
+      // 调用 Supabase 登出
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error('Supabase 登出失败:', error);
+        throw new Error(`登出失败: ${error.message}`);
+      }
+      
+      console.log('登出成功，本地状态已清理');
+      
+      // 清理本地存储（如果有的话）
+      try {
+        localStorage.removeItem('supabase.auth.token');
+        sessionStorage.clear();
+      } catch (storageError) {
+        console.warn('清理本地存储时出错:', storageError);
+      }
+      
+    } catch (error) {
+      console.error('登出过程中发生错误:', error);
+      // 重新抛出错误，让调用者处理
+      throw error;
+    }
   };
 
   const value = {
