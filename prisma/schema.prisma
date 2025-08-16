@@ -1,0 +1,66 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique @map("email")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  // 用户创建的待办事项
+  todos Todo[]
+  
+  @@map("users")
+}
+
+model Todo {
+  id         String   @id @default(cuid())
+  text       String
+  status     TodoStatus @default(TODO)
+  url        String?
+  githubUrl  String? @map("github_url")
+  order      Int      @default(0) @map("order") // 添加排序字段
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  
+  // 关联用户
+  userId String @map("user_id")
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // 子任务
+  subtasks Subtask[]
+  
+  @@map("todos")
+}
+
+model Subtask {
+  id          String @id @default(cuid())
+  text        String
+  isCompleted Boolean @default(false) @map("is_completed")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  // 关联待办事项
+  todoId String @map("todo_id")
+  todo   Todo @relation(fields: [todoId], references: [id], onDelete: Cascade)
+  
+  @@map("subtasks")
+}
+
+enum TodoStatus {
+  TODO
+  DOING
+  DONE
+}

@@ -37,12 +37,15 @@ import {
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox"; // Added Checkbox for subtasks
 
-type TodoStatus = "Todo" | "Doing" | "Done";
+import type { Subtask } from "@/lib/supabase";
 
-interface Subtask {
+type TodoStatus = "TODO" | "DOING" | "DONE";
+
+// 本地编辑用的子任务类型
+interface EditableSubtask {
   id: string;
   text: string;
-  isCompleted: boolean;
+  is_completed: boolean;
 }
 
 interface TodoItemProps {
@@ -52,20 +55,21 @@ interface TodoItemProps {
   url?: string;
   githubUrl?: string; // Added GitHub URL prop
   subtasks: Subtask[]; // Added subtasks prop
-  onUpdateTodo: (id: string, updates: { status?: TodoStatus; url?: string; githubUrl?: string; text?: string; subtasks?: Subtask[] }) => void;
+  onUpdateTodo: (id: string, updates: { status?: TodoStatus; url?: string; githubUrl?: string; text?: string; subtasks?: EditableSubtask[] }) => void;
   onDelete: (id: string) => void;
+  onSyncSubtasks?: (todoId: string, subtasks: Subtask[]) => void; // 新增子任务同步回调
 }
 
 const statusColors = {
-  Todo: "bg-gray-100 text-gray-800",
-  Doing: "bg-blue-100 text-blue-800",
-  Done: "bg-green-100 text-green-800",
+  TODO: "bg-gray-100 text-gray-800",
+  DOING: "bg-blue-100 text-blue-800",
+  DONE: "bg-green-100 text-green-800",
 };
 
 const statusLabels = {
-  Todo: "To Do",
-  Doing: "In Progress",
-  Done: "Completed"
+  TODO: "To Do",
+  DOING: "In Progress",
+  DONE: "Completed"
 };
 
 const TodoItem: React.FC<TodoItemProps> = ({
@@ -77,6 +81,7 @@ const TodoItem: React.FC<TodoItemProps> = ({
   subtasks, // Destructure subtasks
   onUpdateTodo,
   onDelete,
+  onSyncSubtasks,
 }) => {
   // Sortable functionality
   const {
@@ -97,7 +102,9 @@ const TodoItem: React.FC<TodoItemProps> = ({
   const [editedUrl, setEditedUrl] = useState(url || "");
   const [editedGitHubUrl, setEditedGitHubUrl] = useState(githubUrl || ""); // State for GitHub URL
   const [editedText, setEditedText] = useState(text);
-  const [editedSubtasks, setEditedSubtasks] = useState<Subtask[]>(subtasks); // State for subtasks
+  const [editedSubtasks, setEditedSubtasks] = useState<EditableSubtask[]>(
+    subtasks.map(s => ({ id: s.id, text: s.text, is_completed: s.is_completed }))
+  ); // State for subtasks
   const [newSubtaskText, setNewSubtaskText] = useState(""); // State for new subtask input
   const [editingSubtaskId, setEditingSubtaskId] = useState<string | null>(null); // State for editing subtask
   const [editingSubtaskText, setEditingSubtaskText] = useState(""); // State for editing subtask text
@@ -115,53 +122,62 @@ const TodoItem: React.FC<TodoItemProps> = ({
   }, [subtasks]);
 
   const handleStatusChange = (newStatus: TodoStatus) => {
-    onUpdateTodo(id, { status: newStatus, url: editedUrl, githubUrl: editedGitHubUrl, text: editedText, subtasks: editedSubtasks });
+    onUpdateTodo(id, mapFieldsForUpdate({ status: newStatus, url: editedUrl, githubUrl: editedGitHubUrl, text: editedText, subtasks: editedSubtasks }));
   };
 
   const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newUrl = e.target.value;
     setEditedUrl(newUrl);
-    onUpdateTodo(id, { url: newUrl, status: status, githubUrl: editedGitHubUrl, text: editedText, subtasks: editedSubtasks });
+    onUpdateTodo(id, mapFieldsForUpdate({ url: newUrl, status: status, githubUrl: editedGitHubUrl, text: editedText, subtasks: editedSubtasks }));
   };
 
   const handleGitHubUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newGitHubUrl = e.target.value;
     setEditedGitHubUrl(newGitHubUrl);
-    onUpdateTodo(id, { githubUrl: newGitHubUrl, status: status, text: editedText, url: editedUrl, subtasks: editedSubtasks });
+    onUpdateTodo(id, mapFieldsForUpdate({ githubUrl: newGitHubUrl, status: status, text: editedText, url: editedUrl, subtasks: editedSubtasks }));
   };
 
   const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newText = e.target.value;
     setEditedText(newText);
-    onUpdateTodo(id, { text: newText, status: status, url: editedUrl, githubUrl: editedGitHubUrl, subtasks: editedSubtasks });
+    onUpdateTodo(id, mapFieldsForUpdate({ text: newText, status: status, url: editedUrl, githubUrl: editedGitHubUrl, subtasks: editedSubtasks }));
   };
 
   const handleAddSubtask = () => {
     if (newSubtaskText.trim()) {
-      const newSubtask: Subtask = {
+      const newSubtask: EditableSubtask = {
         id: Date.now().toString(),
         text: newSubtaskText.trim(),
-        isCompleted: false,
+        is_completed: false,
       };
       const updatedSubtasks = [...editedSubtasks, newSubtask];
       setEditedSubtasks(updatedSubtasks);
-      onUpdateTodo(id, { subtasks: updatedSubtasks, text: editedText, status: status, url: editedUrl, githubUrl: editedGitHubUrl });
+      // 同步子任务到数据库
+      if (onSyncSubtasks) {
+        onSyncSubtasks(id, updatedSubtasks as Subtask[]);
+      }
       setNewSubtaskText("");
     }
   };
 
   const handleToggleSubtask = (subtaskId: string) => {
     const updatedSubtasks = editedSubtasks.map((subtask) =>
-      subtask.id === subtaskId ? { ...subtask, isCompleted: !subtask.isCompleted } : subtask
+      subtask.id === subtaskId ? { ...subtask, is_completed: !subtask.is_completed } : subtask
     );
     setEditedSubtasks(updatedSubtasks);
-    onUpdateTodo(id, { subtasks: updatedSubtasks, text: editedText, status: status, url: editedUrl, githubUrl: editedGitHubUrl });
+    // 同步子任务到数据库
+    if (onSyncSubtasks) {
+      onSyncSubtasks(id, updatedSubtasks as Subtask[]);
+    }
   };
 
   const handleDeleteSubtask = (subtaskId: string) => {
     const updatedSubtasks = editedSubtasks.filter((subtask) => subtask.id !== subtaskId);
     setEditedSubtasks(updatedSubtasks);
-    onUpdateTodo(id, { subtasks: updatedSubtasks, text: editedText, status: status, url: editedUrl, githubUrl: editedGitHubUrl });
+    // 同步子任务到数据库
+    if (onSyncSubtasks) {
+      onSyncSubtasks(id, updatedSubtasks as Subtask[]);
+    }
   };
 
   const handleEditSubtask = (subtaskId: string, currentText: string) => {
@@ -175,7 +191,10 @@ const TodoItem: React.FC<TodoItemProps> = ({
         subtask.id === subtaskId ? { ...subtask, text: editingSubtaskText.trim() } : subtask
       );
       setEditedSubtasks(updatedSubtasks);
-      onUpdateTodo(id, { subtasks: updatedSubtasks, text: editedText, status: status, url: editedUrl, githubUrl: editedGitHubUrl });
+      // 同步子任务到数据库
+      if (onSyncSubtasks) {
+        onSyncSubtasks(id, updatedSubtasks as Subtask[]);
+      }
     }
     setEditingSubtaskId(null);
     setEditingSubtaskText("");
@@ -184,6 +203,20 @@ const TodoItem: React.FC<TodoItemProps> = ({
   const handleCancelSubtaskEdit = () => {
     setEditingSubtaskId(null);
     setEditingSubtaskText("");
+  };
+
+  // 字段名映射函数：将前端字段名转换为数据库字段名
+  const mapFieldsForUpdate = (updates: { status?: TodoStatus; url?: string; githubUrl?: string; text?: string; subtasks?: EditableSubtask[] }) => {
+    const mappedUpdates: { status?: TodoStatus; url?: string; github_url?: string; text?: string } = {};
+    
+    if (updates.status !== undefined) mappedUpdates.status = updates.status;
+    if (updates.text !== undefined) mappedUpdates.text = updates.text;
+    if (updates.url !== undefined) mappedUpdates.url = updates.url;
+    if (updates.githubUrl !== undefined) mappedUpdates.github_url = updates.githubUrl; // 映射字段名
+    
+    // 注意：subtasks 不包含在映射中，因为它是关联表，不是 todos 表的直接字段
+    
+    return mappedUpdates;
   };
 
   // Function to strip "https://" or "http://" from the URL for display
@@ -227,9 +260,9 @@ const TodoItem: React.FC<TodoItemProps> = ({
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Todo">Todo</SelectItem>
-                    <SelectItem value="Doing">Doing</SelectItem>
-                    <SelectItem value="Done">Done</SelectItem>
+                    <SelectItem value="TODO">Todo</SelectItem>
+                    <SelectItem value="DOING">Doing</SelectItem>
+                    <SelectItem value="DONE">Done</SelectItem>
                   </SelectContent>
                 </Select>
                 <Button 
@@ -273,7 +306,7 @@ const TodoItem: React.FC<TodoItemProps> = ({
                     <div key={subtask.id} className="flex items-center space-x-2">
                       <Checkbox
                         id={`list-subtask-${subtask.id}`}
-                        checked={subtask.isCompleted}
+                        checked={subtask.is_completed}
                         onCheckedChange={() => handleToggleSubtask(subtask.id)}
                       />
                       {editingSubtaskId === subtask.id ? (
@@ -313,7 +346,7 @@ const TodoItem: React.FC<TodoItemProps> = ({
                             htmlFor={`list-subtask-${subtask.id}`}
                             className={cn(
                               "text-sm flex-grow truncate min-w-0",
-                              subtask.isCompleted && "line-through text-muted-foreground"
+                              subtask.is_completed && "line-through text-muted-foreground"
                             )}
                           >
                             {subtask.text}
@@ -429,7 +462,7 @@ const TodoItem: React.FC<TodoItemProps> = ({
                       <div className="flex items-center space-x-2 w-full min-w-0">
                         <Checkbox
                           id={`subtask-${subtask.id}`}
-                          checked={subtask.isCompleted}
+                          checked={subtask.is_completed}
                           onCheckedChange={() => handleToggleSubtask(subtask.id)}
                           className="flex-shrink-0"
                         />
@@ -470,7 +503,7 @@ const TodoItem: React.FC<TodoItemProps> = ({
                               htmlFor={`subtask-${subtask.id}`}
                               className={cn(
                                 "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex-1 min-w-0 truncate",
-                                subtask.isCompleted && "line-through text-muted-foreground"
+                                subtask.is_completed && "line-through text-muted-foreground"
                               )}
                             >
                               {subtask.text}
