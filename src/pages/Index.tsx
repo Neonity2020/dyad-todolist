@@ -3,6 +3,7 @@ import { MadeWithDyad } from "@/components/made-with-dyad";
 import TodoForm from "@/components/TodoForm";
 import TodoItem from "@/components/TodoItem";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { GripVertical } from "lucide-react";
 import {
   DndContext,
@@ -50,9 +51,18 @@ const Index: React.FC = () => {
     }));
   });
 
+  // 添加筛选状态
+  const [statusFilter, setStatusFilter] = useState<TodoStatus | "All">("All");
+
   useEffect(() => {
     localStorage.setItem("todos", JSON.stringify(todos));
   }, [todos]);
+
+  // 筛选任务函数
+  const filteredTodos = todos.filter(todo => {
+    if (statusFilter === "All") return true;
+    return todo.status === statusFilter;
+  });
 
   const addTodo = (text: string) => {
     const newTodo: Todo = {
@@ -76,6 +86,11 @@ const Index: React.FC = () => {
 
   const deleteTodo = (id: string) => {
     setTodos((prevTodos) => prevTodos.filter((todo) => todo.id !== id));
+  };
+
+  // 获取各状态的任务数量
+  const getStatusCount = (status: TodoStatus) => {
+    return todos.filter(todo => todo.status === status).length;
   };
 
   // Drag and drop sensors
@@ -121,6 +136,43 @@ const Index: React.FC = () => {
         </CardHeader>
         <CardContent>
           <TodoForm onAddTodo={addTodo} />
+          
+          {/* 状态筛选器 */}
+          <div className="mb-4 flex flex-wrap gap-2 justify-center">
+            <Button
+              variant={statusFilter === "All" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setStatusFilter("All")}
+              className="text-xs"
+            >
+              All ({todos.length})
+            </Button>
+            <Button
+              variant={statusFilter === "Todo" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setStatusFilter("Todo")}
+              className="text-xs bg-gray-100 text-gray-800 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
+            >
+              Todo ({getStatusCount("Todo")})
+            </Button>
+            <Button
+              variant={statusFilter === "Doing" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setStatusFilter("Doing")}
+              className="text-xs bg-blue-100 text-blue-800 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-200 dark:hover:bg-blue-800"
+            >
+              Doing ({getStatusCount("Doing")})
+            </Button>
+            <Button
+              variant={statusFilter === "Done" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setStatusFilter("Done")}
+              className="text-xs bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900 dark:text-green-200 dark:hover:bg-green-800"
+            >
+              Done ({getStatusCount("Done")})
+            </Button>
+          </div>
+
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
@@ -128,14 +180,14 @@ const Index: React.FC = () => {
             onDragEnd={handleDragEnd}
             onDragCancel={handleDragCancel}
           >
-            <SortableContext items={todos.map(todo => todo.id)} strategy={verticalListSortingStrategy}>
+            <SortableContext items={filteredTodos.map(todo => todo.id)} strategy={verticalListSortingStrategy}>
               <div className="space-y-2">
-                {todos.length === 0 ? (
+                {filteredTodos.length === 0 ? (
                   <p className="text-center text-muted-foreground">
-                    No todos yet! Add one above.
+                    {todos.length === 0 ? "No todos yet! Add one above." : `No ${statusFilter === "All" ? "" : statusFilter} todos found.`}
                   </p>
                 ) : (
-                  todos.map((todo) => (
+                  filteredTodos.map((todo) => (
                     <TodoItem
                       key={todo.id}
                       id={todo.id}
